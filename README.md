@@ -4,7 +4,7 @@ Item Priority Manager is a Lua mod for The Binding of Isaac: Repentance+ that ch
 
 ## Status
 
-This project currently requires a custom REPENTOGON build. The required native API is supplied as the source patch in [native/repentogon-item-pool-weight-setter.patch](native/repentogon-item-pool-weight-setter.patch). A prebuilt DLL verified against REPENTOGON `1.1.2g` is included at `native/bin/zhlREPENTOGON.dll`; it is not part of an official REPENTOGON release.
+This project currently requires a custom REPENTOGON build. The required native API is supplied as the source patch in [native/repentogon-item-pool-weight-setter.patch](native/repentogon-item-pool-weight-setter.patch). A prebuilt DLL verified against REPENTOGON `1.1.2g` is included at `native/bin/zhlREPENTOGON.dll`. It is not part of an official REPENTOGON release.
 
 ## What It Does
 
