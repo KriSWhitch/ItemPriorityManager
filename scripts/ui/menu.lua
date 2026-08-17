@@ -264,7 +264,7 @@ function Menu.new(mod, priority, preferenceService, preferences, catalog, unlock
                     if string.len(name) > 22 then
                         name = string.sub(name, 1, 21) .. "..."
                     end
-                    local multiplierLabel = multiplier < 0.01 and "0" or (multiplier > 9999 and "99999" or string.format("%.0f", multiplier))
+                    local multiplierLabel = tostring(multiplier)
                     local text = marker .. name .. "  x" .. multiplierLabel
                     Isaac.RenderText(text, LEFT + (column - 1) * COLUMN_WIDTH,
                         TOP + (row - 1) * ROW_HEIGHT, red, green, blue, 1)
