@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/LuaLS/vscode-lua/master/setting/schema.json",
+  "Lua.diagnostics.globals": [
+    "CollectibleType",
+    "Game",
+    "Isaac",
+    "ItemPoolType",
+    "ModCallbacks",
+    "RegisterMod"
+  ]
+}

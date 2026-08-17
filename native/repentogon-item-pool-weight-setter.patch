@@ -1,0 +1,38 @@
+diff --git a/repentogon/LuaInterfaces/LuaItemPool.cpp b/repentogon/LuaInterfaces/LuaItemPool.cpp
+--- a/repentogon/LuaInterfaces/LuaItemPool.cpp
++++ b/repentogon/LuaInterfaces/LuaItemPool.cpp
+@@ -467,6 +467,27 @@ LUA_FUNCTION(Lua_ItemPoolGetCollectiblesFromPool) {
+ 	return 1;
+ }
+ 
++LUA_FUNCTION(Lua_ItemPoolSetCollectibleWeight) {
++	ItemPool* itemPool = lua::GetLuabridgeUserdata<ItemPool*>(L, 1, lua::Metatables::ITEM_POOL, "ItemPool");
++	int itemPoolType = (int)luaL_checkinteger(L, 2);
++	lua_Integer entryIndex = luaL_checkinteger(L, 3);
++	lua_Number weight = luaL_checknumber(L, 4);
++
++	auto* pool = ItemPoolManager::GetItemPool(itemPoolType);
++	if (!pool) {
++		return luaL_argerror(L, 2, "Invalid ItemPoolType");
++	}
++	if (entryIndex < 1 || entryIndex > (lua_Integer)pool->GetPoolData()->_poolList.size()) {
++		return luaL_argerror(L, 3, "Invalid pool entry index");
++	}
++	if (weight <= 0.0) {
++		return luaL_argerror(L, 4, "Weight must be greater than zero");
++	}
++
++	pool->GetPoolData()->_poolList[(size_t)entryIndex - 1]._weight = (float)weight;
++	return 0;
++}
++
+ LUA_FUNCTION(Lua_ItemPoolSetLastPool) {
+ 	ItemPool* itemPool = lua::GetLuabridgeUserdata<ItemPool*>(L, 1, lua::Metatables::ITEM_POOL, "ItemPool");
+ 	int poolType = (int)luaL_checkinteger(L, 2);
+@@ -787,5 +808,6 @@ HOOK_METHOD(LuaEngine, RegisterClasses, () -> void) {
+ 		{ "GetRemovedCollectibles", Lua_ItemPoolGetRemovedCollectibles },
+ 		{ "GetRoomBlacklistedCollectibles", Lua_ItemPoolGetRoomBlacklistedCollectibles },
+ 		{ "GetCollectiblesFromPool", Lua_ItemPoolGetCollectiblesFromPool },
++		{ "SetCollectibleWeight", Lua_ItemPoolSetCollectibleWeight },
+ 		{ "SetLastPool", Lua_ItemPoolSetLastPool },
+ 		{ "CanSpawnCollectible", Lua_ItemPoolCanSpawnCollectible },
