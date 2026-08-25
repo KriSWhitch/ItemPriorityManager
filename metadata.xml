@@ -3,7 +3,7 @@
     <name>Item Priority Manager</name>
     <directory>item_priority_manager</directory>
     <description>Requires a patched REPENTOGON runtime. Adjust collectible appearance priorities.</description>
-    <version>0.1.0</version>
+    <version>0.2.0</version>
     <visibility>Private</visibility>
     <tag id="Tweaks"/>
 </metadata>

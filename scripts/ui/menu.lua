@@ -6,8 +6,9 @@ local ROW_HEIGHT = 20
 local COLUMN_WIDTH = 265
 local LEFT = 32
 local TOP = 58
+local PRESET_COUNT = 9
 
-function Menu.new(mod, priority, preferenceService, preferences, catalog, unlockedCount, totalCount, log)
+function Menu.new(mod, priority, preferenceService, preferences, presets, catalog, unlockedCount, totalCount, log)
     local state = {
         open = false,
         page = 1,
@@ -18,11 +19,14 @@ function Menu.new(mod, priority, preferenceService, preferences, catalog, unlock
         searchActive = false,
         searchQuery = "",
         previousSearchKeys = {},
+        confirmingReset = false,
+        presetsOpen = false,
+        presetSlot = 1,
     }
     local visibleCatalog = catalog
 
     local function save()
-        preferenceService.save(mod, preferences, log)
+        preferenceService.save(mod, preferences, presets, log)
     end
 
     local function pageCount()
@@ -36,6 +40,50 @@ function Menu.new(mod, priority, preferenceService, preferences, catalog, unlock
     local function setNotice(message)
         state.notice = message
         state.noticeFrames = 120
+    end
+
+    local function loadPreset(slot)
+        local preset = presets[slot]
+        if preset == nil then
+            setNotice("Preset " .. tostring(slot) .. " is empty.")
+            return
+        end
+
+        for itemId in pairs(preferences) do
+            preferences[itemId] = nil
+        end
+
+        local applied, skipped = 0, 0
+        for itemId, multiplier in pairs(preset.preferences) do
+            if priority.set(preferences, itemId, multiplier, unlockedCount) then
+                applied = applied + 1
+            else
+                skipped = skipped + 1
+            end
+        end
+
+        save()
+        if skipped > 0 then
+            setNotice("Loaded preset " .. tostring(slot) .. " (" .. tostring(skipped) .. " skipped over the limit).")
+        else
+            setNotice("Loaded preset " .. tostring(slot) .. ".")
+        end
+    end
+
+    local function saveToPreset(slot)
+        local copy = {}
+        for itemId, multiplier in pairs(preferences) do
+            copy[itemId] = multiplier
+        end
+        presets[slot] = { preferences = copy }
+        save()
+        setNotice("Saved current priorities to preset " .. tostring(slot) .. ".")
+    end
+
+    local function clearPreset(slot)
+        presets[slot] = nil
+        save()
+        setNotice("Cleared preset " .. tostring(slot) .. ".")
     end
 
     local function changePriority(increase)
@@ -156,9 +204,28 @@ function Menu.new(mod, priority, preferenceService, preferences, catalog, unlock
         end
     end
 
+    local function updatePresets()
+        for slot = 1, PRESET_COUNT do
+            local key = Keyboard["KEY_" .. tostring(slot)]
+            if isTriggered(key) then
+                state.presetSlot = slot
+            end
+        end
+
+        if isTriggered(Keyboard.KEY_S) then
+            saveToPreset(state.presetSlot)
+        elseif isTriggered(Keyboard.KEY_X) then
+            loadPreset(state.presetSlot)
+        elseif isTriggered(Keyboard.KEY_D) then
+            clearPreset(state.presetSlot)
+        elseif isTriggered(Keyboard.KEY_P) or isTriggered(Keyboard.KEY_ESCAPE) then
+            state.presetsOpen = false
+        end
+    end
+
     function state:update()
         if isTriggered(Keyboard.KEY_I) then
-            if not state.searchActive then
+            if not state.searchActive and not state.presetsOpen and not state.confirmingReset then
                 state.open = not state.open
             end
         end
@@ -169,6 +236,24 @@ function Menu.new(mod, priority, preferenceService, preferences, catalog, unlock
 
         if state.noticeFrames > 0 then
             state.noticeFrames = state.noticeFrames - 1
+        end
+
+        if state.confirmingReset then
+            if isTriggered(Keyboard.KEY_Y) then
+                priority.resetAll(preferences)
+                save()
+                state.confirmingReset = false
+                setNotice("All item priorities were reset to Default.")
+            elseif isTriggered(Keyboard.KEY_N) or isTriggered(Keyboard.KEY_ESCAPE) then
+                state.confirmingReset = false
+                setNotice("Reset canceled.")
+            end
+            return
+        end
+
+        if state.presetsOpen then
+            updatePresets()
+            return
         end
 
         if isTriggered(searchKey) then
@@ -207,10 +292,10 @@ function Menu.new(mod, priority, preferenceService, preferences, catalog, unlock
             changePriority(false)
         elseif isTriggered(Keyboard.KEY_X) then
             changePriority(true)
+        elseif isTriggered(Keyboard.KEY_P) then
+            state.presetsOpen = true
         elseif isTriggered(Keyboard.KEY_R) then
-            priority.resetAll(preferences)
-            save()
-            setNotice("All item priorities were reset to Default.")
+            state.confirmingReset = true
         end
     end
 
@@ -234,7 +319,26 @@ function Menu.new(mod, priority, preferenceService, preferences, catalog, unlock
         Isaac.RenderScaledText("Unlocked " .. tostring(unlockedCount) .. " / " .. tostring(totalCount), LEFT, 36, 0.7, 0.7, 0.65, 0.7, 0.75, 1)
         Isaac.RenderScaledText("Changes " .. tostring(used) .. " / " .. tostring(limit), LEFT + 180, 36, 0.7, 0.7, 0.65, 0.7, 0.75, 1)
         Isaac.RenderScaledText("Page " .. tostring(state.page) .. " / " .. tostring(pages), 360, 36, 0.7, 0.7, 0.65, 0.7, 0.75, 1)
-        Isaac.RenderScaledText("Search / (slash)     Z -   X +     Arrows / WASD move     I / Esc close", LEFT, height - 28, 0.7, 0.7, 0.65, 0.68, 0.74, 1)
+
+        if state.presetsOpen then
+            local presetLine = ""
+            for slot = 1, PRESET_COUNT do
+                local marker = presets[slot] ~= nil and "*" or " "
+                local open, close = " ", " "
+                if slot == state.presetSlot then
+                    open, close = "[", "]"
+                end
+                presetLine = presetLine .. open .. tostring(slot) .. marker .. close
+            end
+            Isaac.RenderScaledText("Presets: " .. presetLine, LEFT, 48, 0.7, 0.7, 0.65, 0.7, 0.75, 1)
+            Isaac.RenderScaledText("1-9 select   S save   X load   D delete   P / Esc close", LEFT, height - 28, 0.7, 0.7, 0.65, 0.68, 0.74, 1)
+            if state.noticeFrames > 0 then
+                Isaac.RenderText(state.notice, LEFT, height - 42, 1, 0.35, 0.35, 1)
+            end
+            return
+        end
+
+        Isaac.RenderScaledText("Search / (slash)     Z -   X +     P presets   R reset   I / Esc close", LEFT, height - 28, 0.7, 0.7, 0.65, 0.68, 0.74, 1)
         Isaac.RenderScaledText("Search: " .. (state.searchQuery == "" and "all items" or state.searchQuery), LEFT, 48, 0.7, 0.7, 0.65, 0.7, 0.75, 1)
 
         for row = 1, ROWS_PER_PAGE do
@@ -272,7 +376,9 @@ function Menu.new(mod, priority, preferenceService, preferences, catalog, unlock
             end
         end
 
-        if state.noticeFrames > 0 then
+        if state.confirmingReset then
+            Isaac.RenderText("Reset ALL priorities? Y = yes, N = cancel", LEFT, height - 42, 1, 0.85, 0.3, 1)
+        elseif state.noticeFrames > 0 then
             Isaac.RenderText(state.notice, LEFT, height - 42, 1, 0.35, 0.35, 1)
         end
     end

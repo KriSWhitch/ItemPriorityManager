@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.0 - 2026-08-25
+
+- Added 9 priority presets that save and load the full set of item priorities (`P` to open, digits to select, `S`/`X`/`D` to save, load, or clear a slot).
+- Reset-all (`R`) now asks for `Y`/`N` confirmation before clearing priorities.
+
 ## 0.1.0 - 2026-08-17
 
 - Added an in-game menu for unlocked vanilla active and passive collectibles.

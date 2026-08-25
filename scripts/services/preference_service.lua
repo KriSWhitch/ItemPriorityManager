@@ -1,8 +1,9 @@
 local PreferenceService = {}
 local Json = include("json")
 
-local SCHEMA_VERSION = 1
+local SCHEMA_VERSION = 2
 local PROFILE_KEY = "default"
+PreferenceService.PRESET_COUNT = 9
 
 local function isValidMultiplier(value)
     return type(value) == "number" and value > 0
@@ -18,27 +19,45 @@ local function sanitizePreferences(preferences)
     return sanitized
 end
 
+local function sanitizePresets(presets)
+    local sanitized = {}
+    for slot = 1, PreferenceService.PRESET_COUNT do
+        local preset = presets and presets[tostring(slot)]
+        if type(preset) == "table" then
+            sanitized[slot] = { preferences = sanitizePreferences(preset.preferences) }
+        end
+    end
+    return sanitized
+end
+
 function PreferenceService.load(mod, log)
     if not mod:HasData() then
-        return {}
+        return {}, {}
     end
 
     local encoded = mod:LoadData()
     local ok, data = pcall(Json.decode, encoded)
     if not ok or type(data) ~= "table" then
         log("Preference data is malformed; keeping existing data unchanged.")
-        return {}
+        return {}, {}
     end
 
     local profile = data.profiles and data.profiles[PROFILE_KEY]
-    if type(profile) ~= "table" then
-        return {}
-    end
+    local preferences = type(profile) == "table" and sanitizePreferences(profile.preferences) or {}
+    local presets = sanitizePresets(data.presets)
 
-    return sanitizePreferences(profile.preferences)
+    return preferences, presets
 end
 
-function PreferenceService.save(mod, preferences, log)
+function PreferenceService.save(mod, preferences, presets, log)
+    local encodedPresets = {}
+    for slot = 1, PreferenceService.PRESET_COUNT do
+        local preset = presets and presets[slot]
+        if preset ~= nil then
+            encodedPresets[tostring(slot)] = { preferences = sanitizePreferences(preset.preferences) }
+        end
+    end
+
     local payload = {
         schemaVersion = SCHEMA_VERSION,
         profiles = {
@@ -46,6 +65,7 @@ function PreferenceService.save(mod, preferences, log)
                 preferences = sanitizePreferences(preferences),
             },
         },
+        presets = encodedPresets,
         settings = {
             language = "en",
         },

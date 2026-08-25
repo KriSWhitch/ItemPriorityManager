@@ -6,6 +6,7 @@ local ItemPoolService = include("scripts/services/item_pool_service")
 local Menu = include("scripts/ui/menu")
 
 local preferences = {}
+local presets = {}
 local catalog = {}
 local unlockedCount = 0
 local supportedCount = 0
@@ -20,7 +21,7 @@ end
 local function createMenu()
     catalog, unlockedCount = ItemCatalogService.build()
     supportedCount = ItemCatalogService.getSupportedTotalCount()
-    menu = Menu.new(mod, Priority, PreferenceService, preferences, catalog,
+    menu = Menu.new(mod, Priority, PreferenceService, preferences, presets, catalog,
         unlockedCount, supportedCount, log)
 end
 
@@ -37,7 +38,7 @@ local function applySavedWeights()
 end
 
 local function onGameStarted(_, isContinued)
-    preferences = PreferenceService.load(mod, log)
+    preferences, presets = PreferenceService.load(mod, log)
     createMenu()
 
     applyPending = not isContinued
@@ -47,7 +48,7 @@ end
 mod:AddCallback(ModCallbacks.MC_POST_GAME_STARTED, onGameStarted)
 mod:AddCallback(ModCallbacks.MC_POST_UPDATE, function()
     if menu == nil then
-        preferences = PreferenceService.load(mod, log)
+        preferences, presets = PreferenceService.load(mod, log)
         createMenu()
     end
     if menu ~= nil then
