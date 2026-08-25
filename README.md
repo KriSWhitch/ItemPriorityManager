@@ -5,7 +5,7 @@ Item Priority Manager is a Lua mod for The Binding of Isaac: Repentance+ that ch
 <details>
 <summary><b>Click here to see what it looks like in the game</b></summary>
 
-<img width="1920" height="1080" alt="20ECAE~1" src="https://github.com/user-attachments/assets/0836f196-20e3-4001-91a0-9ccbf17fc398" />
+<img width="1920" height="1080" alt="20766E~1" src="https://github.com/user-attachments/assets/96ccdecb-c9b9-4f8f-b9ff-b54894623ec3" />
 </details>
 
 
