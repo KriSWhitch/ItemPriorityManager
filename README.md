@@ -15,15 +15,13 @@ This project currently requires a custom REPENTOGON build. The required native A
 
 ## What It Does
 
-- Shows unlocked vanilla active and passive collectibles in an in-game menu.
-- Saves `0.50x` (decreased) and `1.50x` (increased) item priorities; unlisted items remain at `1.00x`.
-- Limits changed items to `floor(unlocked collectibles / 5)`.
-- Saves up to 9 priority presets so different priority sets (for example, per character) can be stored and reloaded.
-- Asks for `Y` / `N` confirmation before resetting all priorities.
-- On a new run, applies `initialWeight * priorityMultiplier` once to each live pool entry through the patched REPENTOGON API.
-- Leaves item selection, pool depletion, and RNG to the game.
+- Lets you open an in-game menu listing every collectible you've already unlocked.
+- Lets you mark items as more likely or less likely to show up, without ever removing an item from the game entirely.
+- Limits how many items you can change at once, so the pool stays varied.
+- Lets you save up to 9 different priority setups as presets and switch between them (handy for different characters or playstyles).
+- Applies your choices at the start of each new run, then lets the game pick items normally.
 
-Priorities changed while a run is active apply on the next new run. Continued runs deliberately do not receive a second weight application.
+Priorities you change mid-run take effect on your next new run, not the one you're currently playing.
 
 ## Manual Installation
 
